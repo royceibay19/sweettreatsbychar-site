@@ -433,22 +433,12 @@
             <h4>Your message is ready</h4>
             <p>Messenger doesn't let websites type a message for you, so we copy it. Then you paste it in the chat.</p>
             <pre class="inquiry__preview" id="inquiry-preview"></pre>
-            <ol class="inquiry__steps">
-              <li>
-                <span class="inquiry__num" aria-hidden="true">1</span>
-                <div>
-                  <button type="button" class="btn btn--ghost" id="copy-message">Copy message</button>
-                  <span class="inquiry__copied" id="copy-status" role="status" aria-live="polite"></span>
-                </div>
-              </li>
-              <li>
-                <span class="inquiry__num" aria-hidden="true">2</span>
-                <div>
-                  <a class="btn btn--primary" id="send-messenger" href="https://m.me/100083340789131" target="_blank" rel="noopener">Open Messenger and paste</a>
-                  <p class="inquiry__hint">In the chat, press and hold the message box, tap <strong>Paste</strong>, then send.</p>
-                </div>
-              </li>
-            </ol>
+            <div class="inquiry__send">
+              <button type="button" class="btn btn--primary" id="copy-message">Copy message</button>
+              <a class="btn btn--ghost" id="send-messenger" href="https://m.me/100083340789131" target="_blank" rel="noopener">Open Messenger</a>
+            </div>
+            <p class="inquiry__copied" id="copy-status" role="status" aria-live="polite"></p>
+            <p class="inquiry__hint"><strong>Copy message</strong> copies it and takes you straight to Sweet Treats by Char on Messenger. In the chat, press and hold the message box, tap <strong>Paste</strong>, then send.</p>
             <p class="inquiry__alt">No Messenger? <a id="send-sms" href="sms:+639661943736">Send it as a text message</a> instead. It fills in by itself.</p>
           </div>
         </form>

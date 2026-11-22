@@ -151,12 +151,19 @@ const copyBtn = document.getElementById("copy-message");
 const copyStatus = document.getElementById("copy-status");
 
 function setCopyStatus(ok) {
-  copyStatus.textContent = ok ? "✓ Copied" : "Couldn't copy. Select the message above and copy it.";
-  copyBtn.textContent = ok ? "Copy again" : "Copy message";
+  copyStatus.textContent = ok ? "✓ Copied" : "Couldn't copy. Select the message above, copy it, then tap Open Messenger.";
+  copyStatus.classList.toggle("is-error", !ok);
 }
 
+// Copy, then take the customer straight to Char's Messenger chat
 copyBtn.addEventListener("click", () => {
-  copyText(currentMessage).then(setCopyStatus);
+  copyText(currentMessage).then((ok) => {
+    setCopyStatus(ok);
+    if (!ok) return;
+    copyStatus.textContent = "✓ Copied. Opening Messenger…";
+    toast("Message copied. In Messenger, press and hold the message box and tap Paste.");
+    setTimeout(() => { window.location.href = MESSENGER_URL; }, 1200);
+  });
 });
 
 // Copy again right as Messenger opens, so the clipboard surely holds the message
@@ -196,8 +203,8 @@ form.addEventListener("submit", async (e) => {
   document.getElementById("send-messenger").href = MESSENGER_URL;
   document.getElementById("send-sms").href = `sms:${PHONE}?body=${encodeURIComponent(message)}`;
 
-  const ok = await copyText(message);
-  setCopyStatus(ok);
+  copyStatus.textContent = "";
+  copyStatus.classList.remove("is-error");
 
   done.hidden = false;
   done.focus();
