@@ -113,10 +113,8 @@ const form = document.getElementById("inquiry");
 const dateInput = document.getElementById("f-date");
 
 // ---- Reservation slots ----
-// Char keeps slots in a Google Sheet (see slots-sheet/SLOTS-SETUP.md). Until a sheet is
-// linked, or if it can't be reached, the defaults below are used.
+// Char's rules are below. Booked days live in bookings.js.
 const SLOTS = {
-  sheetId: "",          // paste the Google Sheet ID here to go live
   dailySlots: 4,        // cakes per day
   leadDays: 4,          // earliest pickup = today + this many days
   monthsAhead: 3,       // how far ahead customers can book
@@ -219,67 +217,20 @@ document.getElementById("times-list").addEventListener("change", () => {
   if (document.getElementById("f-time").classList.contains("has-error")) validateField("time");
 });
 
-// Read the sheet: a "Settings" tab and a "Dates" tab (gviz CSV, no API key needed)
-function parseCsv(text) {
-  const rows = []; let row = [], cell = "", q = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (q) { if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
-    else if (c === '"') q = true;
-    else if (c === ",") { row.push(cell); cell = ""; }
-    else if (c === "\n") { row.push(cell); rows.push(row); row = []; cell = ""; }
-    else if (c !== "\r") cell += c;
-  }
-  if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
-  return rows.map((r) => r.map((c) => c.trim()));
-}
-function parseSheetDate(s) {
-  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-  if (m) return `${m[1]}-${pad(m[2])}-${pad(m[3])}`;
-  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);          // M/D/YYYY (Google Sheets default)
-  if (m) return `${m[3]}-${pad(m[1])}-${pad(m[2])}`;
-  const t = Date.parse(s);
-  return isNaN(t) ? null : toIso(new Date(t));
-}
-const sheetUrl = (tab) => `https://docs.google.com/spreadsheets/d/${SLOTS.sheetId}/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(tab)}`;
-const num = (v) => { const n = parseInt(String(v).replace(/[^\d]/g, ""), 10); return isNaN(n) ? null : n; };
-
-async function loadSlots() {
-  const loading = document.getElementById("cal-loading");
-  if (!SLOTS.sheetId) { loading.hidden = true; return; }
-  try {
-    const [settingsCsv, datesCsv] = await Promise.all(
-      ["Settings", "Dates"].map((tab) => fetch(sheetUrl(tab), { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.text(); }))
-    );
-    parseCsv(settingsCsv).slice(1).forEach(([key = "", value = ""]) => {
-      const k = key.toLowerCase();
-      if (k.startsWith("cakes per day") && num(value) !== null) SLOTS.dailySlots = num(value);
-      else if (k.startsWith("order") && num(value) !== null) SLOTS.leadDays = num(value);
-      else if (k.startsWith("pickup times") && value) SLOTS.pickupTimes = value.split(/[,;]/).map((t) => t.trim()).filter(Boolean);
-      else if (k.startsWith("closed")) SLOTS.closedWeekdays = value.toLowerCase().split(/[,;]/).map((t) => t.trim()).filter(Boolean);
-    });
-    parseCsv(datesCsv).slice(1).forEach(([date = "", booked = "", slots = "", note = ""]) => {
-      const iso = parseSheetDate(date);
-      if (!iso) return;
-      const closed = /closed/i.test(note) || /closed/i.test(slots);
-      dayOverrides[iso] = { booked: num(booked) || 0, slots: closed ? 0 : num(slots), closed, note: closed ? "" : note };
-    });
-  } catch (err) {
-    noteEl.textContent = "We couldn't load live slots right now. Pick your date and we'll confirm it on Messenger.";
-  } finally {
-    loading.hidden = true;
-    renderTimes();
-    renderCalendar();
-    if (dateInput.value) {
-      const s = dayInfo(fromIso(dateInput.value)).state;
-      if (s === "open" || s === "few") pickDate(dateInput.value); else { dateInput.value = ""; pickedEl.textContent = ""; }
-    }
-  }
-}
+// Booked days come from bookings.js
+(window.BOOKINGS || []).forEach(([date, booked, note = "", slots]) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date))) return;
+  const closed = String(booked).toLowerCase() === "closed";
+  dayOverrides[date] = {
+    booked: closed ? 0 : Number(booked) || 0,
+    slots: closed ? 0 : (Number.isFinite(slots) ? slots : undefined),
+    closed,
+    note: closed ? "" : note,
+  };
+});
 
 renderTimes();
 renderCalendar();
-loadSlots();
 
 // ---- Validation ----
 const rules = {
