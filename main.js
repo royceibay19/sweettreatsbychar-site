@@ -49,24 +49,48 @@ if ("IntersectionObserver" in window && !matchMedia("(prefers-reduced-motion: re
 // ---- Messenger links: one place to change the URL ----
 document.querySelectorAll(".js-messenger").forEach((a) => { a.href = MESSENGER_URL; });
 
+// Messenger links (m.me) cannot carry a typed message, so we copy the text
+// to the clipboard and tell the customer to paste it in the chat.
+
 // "Ask about this cake" buttons copy a short note so the customer can paste it in Messenger
 document.querySelectorAll(".js-messenger[data-cake]").forEach((a) => {
   a.addEventListener("click", () => {
-    copyText(`Hi Char! I'd like to ask about the ${a.dataset.cake}.`);
+    copyText(`Hi Char! I'd like to ask about the ${a.dataset.cake}.`).then((ok) => {
+      if (ok) toast("Message copied. In Messenger, press and hold the message box and tap Paste.");
+    });
   });
 });
 
-async function copyText(text) {
-  try { await navigator.clipboard.writeText(text); return true; }
-  catch {
+// Copy must start inside the click itself, or phones block it.
+function copyText(text) {
+  const fallback = () => {
     try {
       const t = document.createElement("textarea");
-      t.value = text; t.setAttribute("readonly", ""); t.style.position = "fixed"; t.style.opacity = "0";
-      document.body.appendChild(t); t.select();
+      t.value = text; t.setAttribute("readonly", ""); t.style.position = "fixed"; t.style.top = "0"; t.style.opacity = "0";
+      document.body.appendChild(t);
+      t.focus(); t.select(); t.setSelectionRange(0, text.length);
       const ok = document.execCommand("copy");
       t.remove(); return ok;
     } catch { return false; }
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text).then(() => true, () => fallback());
   }
+  return Promise.resolve(fallback());
+}
+
+let toastTimer;
+function toast(msg) {
+  let el = document.querySelector(".toast");
+  if (!el) {
+    el = document.createElement("div");
+    el.className = "toast"; el.setAttribute("role", "status"); el.setAttribute("aria-live", "polite");
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.classList.add("is-on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("is-on"), 5000);
 }
 
 // ---- Gallery lightbox ----
@@ -122,6 +146,28 @@ function formatDate(iso) {
   return new Date(y, m - 1, d).toLocaleDateString("en-PH", { weekday: "short", month: "long", day: "numeric", year: "numeric" });
 }
 
+let currentMessage = "";
+const copyBtn = document.getElementById("copy-message");
+const copyStatus = document.getElementById("copy-status");
+
+function setCopyStatus(ok) {
+  copyStatus.textContent = ok ? "✓ Copied" : "Couldn't copy. Select the message above and copy it.";
+  copyBtn.textContent = ok ? "Copy again" : "Copy message";
+}
+
+copyBtn.addEventListener("click", () => {
+  copyText(currentMessage).then(setCopyStatus);
+});
+
+// Copy again right as Messenger opens, so the clipboard surely holds the message
+document.getElementById("send-messenger").addEventListener("click", () => {
+  if (!currentMessage) return;
+  copyText(currentMessage).then((ok) => {
+    setCopyStatus(ok);
+    if (ok) toast("Message copied. In Messenger, press and hold the message box and tap Paste.");
+  });
+});
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const results = Object.keys(rules).map(validateField);
@@ -144,15 +190,14 @@ form.addEventListener("submit", async (e) => {
   if (f.details.value.trim()) lines.push(`Details: ${f.details.value.trim()}`);
   const message = lines.join("\n");
 
+  currentMessage = message;
   const done = document.getElementById("inquiry-done");
   document.getElementById("inquiry-preview").textContent = message;
   document.getElementById("send-messenger").href = MESSENGER_URL;
   document.getElementById("send-sms").href = `sms:${PHONE}?body=${encodeURIComponent(message)}`;
 
-  const copied = await copyText(message);
-  document.getElementById("done-copy").textContent = copied
-    ? "We've copied it for you. Open Messenger and paste it to send, or send it as a text."
-    : "Copy the message below, then open Messenger and paste it to send. Or send it as a text.";
+  const ok = await copyText(message);
+  setCopyStatus(ok);
 
   done.hidden = false;
   done.focus();
