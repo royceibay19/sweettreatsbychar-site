@@ -371,7 +371,7 @@
             </div>
             <div>
               <dt>Pickup times</dt>
-              <dd>Agreed with you when you order.</dd>
+              <dd>Choose your date and time in the form. We confirm it on Messenger.</dd>
             </div>
           </dl>
         </div>
@@ -389,25 +389,48 @@
             <input id="f-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="09xx xxx xxxx" required>
             <p class="field__error" id="e-phone">Please enter a mobile number we can reach.</p>
           </div>
-          <div class="field-row">
-            <div class="field">
-              <label for="f-occasion">Occasion</label>
-              <select id="f-occasion" name="occasion" required>
-                <option value="">Choose one</option>
-                <option>Birthday</option>
-                <option>Christening</option>
-                <option>Wedding</option>
-                <option>Anniversary</option>
-                <option>Other celebration</option>
-              </select>
-              <p class="field__error" id="e-occasion">Please choose an occasion.</p>
-            </div>
-            <div class="field">
-              <label for="f-date">Pickup date</label>
-              <input id="f-date" name="date" type="date" required>
-              <p class="field__error" id="e-date">Please choose a date from today onwards.</p>
-            </div>
+          <div class="field">
+            <label for="f-occasion">Occasion</label>
+            <select id="f-occasion" name="occasion" required>
+              <option value="">Choose one</option>
+              <option>Birthday</option>
+              <option>Christening</option>
+              <option>Wedding</option>
+              <option>Anniversary</option>
+              <option>Other celebration</option>
+            </select>
+            <p class="field__error" id="e-occasion">Please choose an occasion.</p>
           </div>
+
+          <div class="field slots" id="slots">
+            <span class="field__label" id="l-date">Pickup date</span>
+            <p class="slots__intro">Pick a day with open slots. Each slot is one cake. Need it sooner? Choose Rush cake below and message us.</p>
+            <div class="cal" aria-labelledby="l-date">
+              <div class="cal__head">
+                <button type="button" class="cal__nav" id="cal-prev" aria-label="Previous month">&#8249;</button>
+                <p class="cal__month" id="cal-month" aria-live="polite"></p>
+                <button type="button" class="cal__nav" id="cal-next" aria-label="Next month">&#8250;</button>
+              </div>
+              <div class="cal__week" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+              <div class="cal__grid" id="cal-grid" role="group" aria-labelledby="l-date"></div>
+              <p class="cal__loading" id="cal-loading">Checking open slots…</p>
+            </div>
+            <ul class="cal__legend" aria-hidden="true">
+              <li><i class="dot dot--open"></i>Open</li>
+              <li><i class="dot dot--few"></i>1 slot left</li>
+              <li><i class="dot dot--full"></i>Full or closed</li>
+            </ul>
+            <p class="slots__picked" id="slots-picked" aria-live="polite"></p>
+            <p class="slots__note" id="slots-note"></p>
+            <input id="f-date" name="date" type="hidden">
+            <p class="field__error" id="e-date">Please choose a pickup date with an open slot.</p>
+          </div>
+
+          <fieldset class="field times" id="f-time" aria-describedby="e-time">
+            <legend class="field__label">Pickup time</legend>
+            <div class="times__list" id="times-list"></div>
+            <p class="field__error" id="e-time">Please choose a pickup time.</p>
+          </fieldset>
           <div class="field">
             <label for="f-cake">Cake type</label>
             <select id="f-cake" name="cake">

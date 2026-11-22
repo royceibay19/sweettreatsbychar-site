@@ -111,28 +111,200 @@ lightbox.addEventListener("click", (e) => { if (e.target === lightbox) lightbox.
 // ---- Inquiry form: validate, then build a ready-to-send message ----
 const form = document.getElementById("inquiry");
 const dateInput = document.getElementById("f-date");
-const today = new Date();
-const isoToday = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-dateInput.min = isoToday;
 
+// ---- Reservation slots ----
+// Char keeps slots in a Google Sheet (see slots-sheet/SLOTS-SETUP.md). Until a sheet is
+// linked, or if it can't be reached, the defaults below are used.
+const SLOTS = {
+  sheetId: "",          // paste the Google Sheet ID here to go live
+  dailySlots: 4,        // cakes per day
+  leadDays: 4,          // earliest pickup = today + this many days
+  monthsAhead: 3,       // how far ahead customers can book
+  closedWeekdays: [],   // open every day; e.g. ["monday"] to close Mondays
+  pickupTimes: ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 NN", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"],
+};
+
+const pad = (n) => String(n).padStart(2, "0");
+const toIso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const fromIso = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const today = new Date(); today.setHours(0, 0, 0, 0);
+const isoToday = toIso(today);
+const WEEKDAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+
+const dayOverrides = {};   // iso -> { slots, booked, closed, note }
+let viewMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+function firstBookable() { const d = new Date(today); d.setDate(d.getDate() + SLOTS.leadDays); return d; }
+function lastBookable() { return new Date(today.getFullYear(), today.getMonth() + SLOTS.monthsAhead + 1, 0); }
+
+function dayInfo(d) {
+  const iso = toIso(d);
+  const o = dayOverrides[iso] || {};
+  const closedDay = SLOTS.closedWeekdays.includes(WEEKDAYS[d.getDay()]);
+  const total = o.slots ?? (closedDay ? 0 : SLOTS.dailySlots);
+  const left = Math.max(0, total - (o.booked || 0));
+  let state = "open";
+  if (d < firstBookable() || d > lastBookable()) state = "unavailable";
+  else if (o.closed || total === 0) state = "closed";
+  else if (left === 0) state = "full";
+  else if (left === 1) state = "few";
+  return { iso, left, total, state, note: o.note || "" };
+}
+
+const calGrid = document.getElementById("cal-grid");
+const calMonth = document.getElementById("cal-month");
+const calPrev = document.getElementById("cal-prev");
+const calNext = document.getElementById("cal-next");
+const pickedEl = document.getElementById("slots-picked");
+const noteEl = document.getElementById("slots-note");
+
+function renderCalendar() {
+  const y = viewMonth.getFullYear(), m = viewMonth.getMonth();
+  calMonth.textContent = viewMonth.toLocaleDateString("en-PH", { month: "long", year: "numeric" });
+  calPrev.disabled = viewMonth <= new Date(today.getFullYear(), today.getMonth(), 1);
+  calNext.disabled = new Date(y, m + 1, 1) > lastBookable();
+  calGrid.innerHTML = "";
+  for (let i = 0; i < new Date(y, m, 1).getDay(); i++) {
+    const b = document.createElement("span"); b.className = "cal__blank"; calGrid.appendChild(b);
+  }
+  const days = new Date(y, m + 1, 0).getDate();
+  for (let n = 1; n <= days; n++) {
+    const d = new Date(y, m, n);
+    const info = dayInfo(d);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `cal__day is-${info.state}`;
+    btn.dataset.date = info.iso;
+    const label = { open: `${info.left} left`, few: "1 left", full: "Full", closed: "Closed", unavailable: "" }[info.state];
+    btn.innerHTML = `${n}${label ? `<small>${label}</small>` : ""}`;
+    const long = d.toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric" });
+    const spoken = { open: `${info.left} slots left`, few: "1 slot left", full: "fully booked", closed: "closed", unavailable: "not available" }[info.state];
+    btn.setAttribute("aria-label", `${long}, ${spoken}`);
+    btn.setAttribute("aria-pressed", String(dateInput.value === info.iso));
+    btn.disabled = !(info.state === "open" || info.state === "few");
+    calGrid.appendChild(btn);
+  }
+}
+
+function pickDate(iso) {
+  dateInput.value = iso;
+  const info = dayInfo(fromIso(iso));
+  const long = fromIso(iso).toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric" });
+  pickedEl.textContent = `${long}: ${info.left} of ${info.total} slot${info.total === 1 ? "" : "s"} left`;
+  noteEl.textContent = info.note;
+  renderCalendar();
+  if (document.getElementById("slots").classList.contains("has-error")) validateField("date");
+}
+
+calGrid.addEventListener("click", (e) => {
+  const btn = e.target.closest(".cal__day");
+  if (btn && !btn.disabled) { pickDate(btn.dataset.date); calGrid.querySelector(`[data-date="${btn.dataset.date}"]`)?.focus(); }
+});
+calPrev.addEventListener("click", () => { viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1); renderCalendar(); });
+calNext.addEventListener("click", () => { viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 1); renderCalendar(); });
+
+function renderTimes() {
+  const list = document.getElementById("times-list");
+  const current = form.elements.time ? form.elements.time.value : "";
+  list.innerHTML = "";
+  SLOTS.pickupTimes.forEach((t, i) => {
+    const label = document.createElement("label");
+    label.innerHTML = `<input type="radio" name="time" value="${t.replace(/"/g, "&quot;")}" id="t-${i}"><span></span>`;
+    label.querySelector("span").textContent = t;
+    if (t === current) label.querySelector("input").checked = true;
+    list.appendChild(label);
+  });
+}
+document.getElementById("times-list").addEventListener("change", () => {
+  if (document.getElementById("f-time").classList.contains("has-error")) validateField("time");
+});
+
+// Read the sheet: a "Settings" tab and a "Dates" tab (gviz CSV, no API key needed)
+function parseCsv(text) {
+  const rows = []; let row = [], cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
+    else if (c === '"') q = true;
+    else if (c === ",") { row.push(cell); cell = ""; }
+    else if (c === "\n") { row.push(cell); rows.push(row); row = []; cell = ""; }
+    else if (c !== "\r") cell += c;
+  }
+  if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
+  return rows.map((r) => r.map((c) => c.trim()));
+}
+function parseSheetDate(s) {
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return `${m[1]}-${pad(m[2])}-${pad(m[3])}`;
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);          // M/D/YYYY (Google Sheets default)
+  if (m) return `${m[3]}-${pad(m[1])}-${pad(m[2])}`;
+  const t = Date.parse(s);
+  return isNaN(t) ? null : toIso(new Date(t));
+}
+const sheetUrl = (tab) => `https://docs.google.com/spreadsheets/d/${SLOTS.sheetId}/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(tab)}`;
+const num = (v) => { const n = parseInt(String(v).replace(/[^\d]/g, ""), 10); return isNaN(n) ? null : n; };
+
+async function loadSlots() {
+  const loading = document.getElementById("cal-loading");
+  if (!SLOTS.sheetId) { loading.hidden = true; return; }
+  try {
+    const [settingsCsv, datesCsv] = await Promise.all(
+      ["Settings", "Dates"].map((tab) => fetch(sheetUrl(tab), { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.text(); }))
+    );
+    parseCsv(settingsCsv).slice(1).forEach(([key = "", value = ""]) => {
+      const k = key.toLowerCase();
+      if (k.startsWith("cakes per day") && num(value) !== null) SLOTS.dailySlots = num(value);
+      else if (k.startsWith("order") && num(value) !== null) SLOTS.leadDays = num(value);
+      else if (k.startsWith("pickup times") && value) SLOTS.pickupTimes = value.split(/[,;]/).map((t) => t.trim()).filter(Boolean);
+      else if (k.startsWith("closed")) SLOTS.closedWeekdays = value.toLowerCase().split(/[,;]/).map((t) => t.trim()).filter(Boolean);
+    });
+    parseCsv(datesCsv).slice(1).forEach(([date = "", booked = "", slots = "", note = ""]) => {
+      const iso = parseSheetDate(date);
+      if (!iso) return;
+      const closed = /closed/i.test(note) || /closed/i.test(slots);
+      dayOverrides[iso] = { booked: num(booked) || 0, slots: closed ? 0 : num(slots), closed, note: closed ? "" : note };
+    });
+  } catch (err) {
+    noteEl.textContent = "We couldn't load live slots right now. Pick your date and we'll confirm it on Messenger.";
+  } finally {
+    loading.hidden = true;
+    renderTimes();
+    renderCalendar();
+    if (dateInput.value) {
+      const s = dayInfo(fromIso(dateInput.value)).state;
+      if (s === "open" || s === "few") pickDate(dateInput.value); else { dateInput.value = ""; pickedEl.textContent = ""; }
+    }
+  }
+}
+
+renderTimes();
+renderCalendar();
+loadSlots();
+
+// ---- Validation ----
 const rules = {
   name: (v) => v.trim().length >= 2,
   phone: (v) => v.replace(/[^\d+]/g, "").replace(/^\+/, "").length >= 10,
   occasion: (v) => v !== "",
-  date: (v) => v !== "" && v >= isoToday,
+  date: (v) => v !== "" && ["open", "few"].includes(dayInfo(fromIso(v)).state),
+  time: (v) => v !== "",
 };
 
 function validateField(name) {
-  const input = form.elements[name];
-  const ok = rules[name](input.value);
-  const field = input.closest(".field");
+  const value = form.elements[name] ? form.elements[name].value : "";
+  const ok = rules[name](value);
+  const field = name === "date" ? document.getElementById("slots")
+    : name === "time" ? document.getElementById("f-time")
+    : form.elements[name].closest(".field");
   field.classList.toggle("has-error", !ok);
-  input.setAttribute("aria-invalid", String(!ok));
-  input.setAttribute("aria-describedby", `e-${name}`);
+  if (name !== "date" && name !== "time") {
+    form.elements[name].setAttribute("aria-invalid", String(!ok));
+    form.elements[name].setAttribute("aria-describedby", `e-${name}`);
+  }
   return ok;
 }
 
-Object.keys(rules).forEach((name) => {
+["name", "phone", "occasion"].forEach((name) => {
   form.elements[name].addEventListener("blur", () => {
     if (form.elements[name].value !== "") validateField(name);
   });
@@ -179,8 +351,9 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const results = Object.keys(rules).map(validateField);
   if (results.includes(false)) {
-    const firstBad = form.querySelector(".has-error input, .has-error select");
+    const firstBad = form.querySelector(".has-error input:not([type=hidden]), .has-error select, .has-error .cal__day:not(:disabled)");
     if (firstBad) firstBad.focus();
+    form.querySelector(".has-error")?.scrollIntoView({ behavior: "smooth", block: "center" });
     return;
   }
 
@@ -192,6 +365,7 @@ form.addEventListener("submit", async (e) => {
     `Mobile: ${f.phone.value.trim()}`,
     `Occasion: ${f.occasion.value}`,
     `Pickup date: ${formatDate(f.date.value)}`,
+    `Pickup time: ${f.time.value}`,
     `Cake type: ${f.cake.value}`,
   ];
   if (f.details.value.trim()) lines.push(`Details: ${f.details.value.trim()}`);
