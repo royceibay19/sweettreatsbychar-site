@@ -8,4 +8,6 @@
 //   ["2026-12-31", 0, "", 6],                   change that day's limit to 6 cakes
 
 window.BOOKINGS = [
+  ["2026-11-28", "closed"],
+  ["2026-11-29", "closed"],
 ];
