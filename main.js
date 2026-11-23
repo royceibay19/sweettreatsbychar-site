@@ -326,7 +326,9 @@ form.addEventListener("submit", async (e) => {
     `Cake type: ${f.cake.value}`,
   ];
   if (f.details.value.trim()) lines.push(`Details: ${f.details.value.trim()}`);
-  lines.push("", "I have read and agree to the reservation policy (50% non-refundable downpayment to secure my slot).");
+  lines.push("", f.cake.value === "Rush cake"
+    ? "I have read and agree to the reservation policy (rush cake: full payment upfront plus ₱180 rush fee)."
+    : "I have read and agree to the reservation policy (50% non-refundable downpayment to secure my slot).");
   const message = lines.join("\n");
 
   currentMessage = message;
