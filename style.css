@@ -278,6 +278,9 @@ p { margin: 0 0 1em; }
 }
 .steps__list h3 { font-size: 1.4rem; margin-bottom: 8px; }
 .steps__list p { color: var(--muted); margin: 0; }
+.steps__list p strong { color: var(--text); }
+.steps__list p a { color: var(--accent); font-weight: 600; }
+#policy { scroll-margin-top: 110px; }
 .steps__note { margin-top: 40px; color: var(--muted); font-style: italic; }
 
 /* ---------- Reviews ---------- */
