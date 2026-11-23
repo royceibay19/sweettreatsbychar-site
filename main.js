@@ -239,10 +239,12 @@ const rules = {
   occasion: (v) => v !== "",
   date: (v) => v !== "" && ["open", "few"].includes(dayInfo(fromIso(v)).state),
   time: (v) => v !== "",
+  agree: (v) => v === true,
 };
 
 function validateField(name) {
-  const value = form.elements[name] ? form.elements[name].value : "";
+  const value = name === "agree" ? form.elements.agree.checked
+    : form.elements[name] ? form.elements[name].value : "";
   const ok = rules[name](value);
   const field = name === "date" ? document.getElementById("slots")
     : name === "time" ? document.getElementById("f-time")
@@ -254,6 +256,10 @@ function validateField(name) {
   }
   return ok;
 }
+
+form.elements.agree.addEventListener("change", () => {
+  if (document.getElementById("policy").classList.contains("has-error")) validateField("agree");
+});
 
 ["name", "phone", "occasion"].forEach((name) => {
   form.elements[name].addEventListener("blur", () => {
@@ -320,6 +326,7 @@ form.addEventListener("submit", async (e) => {
     `Cake type: ${f.cake.value}`,
   ];
   if (f.details.value.trim()) lines.push(`Details: ${f.details.value.trim()}`);
+  lines.push("", "I have read and agree to the reservation policy (50% non-refundable downpayment to secure my slot).");
   const message = lines.join("\n");
 
   currentMessage = message;

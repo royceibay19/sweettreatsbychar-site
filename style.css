@@ -376,6 +376,17 @@ fieldset.field { border: 0; padding: 0; margin: 0 0 18px; min-width: 0; }
 .slots__note { margin: 4px 0 0; font-size: .86rem; color: var(--muted); }
 .slots__note:empty, .slots__picked:empty { display: none; }
 
+/* ---------- Reservation policy ---------- */
+.policy { background: var(--surface-2); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; }
+.policy.has-error { border-color: #B0173F; }
+.policy__title { margin: 0 0 8px; font-family: var(--font-head); font-size: 1.2rem; color: var(--text); }
+.policy__list { margin: 0 0 12px; padding: 0; list-style: none; display: grid; gap: 7px; }
+.policy__list li { position: relative; padding-left: 20px; font-size: .9rem; line-height: 1.45; color: var(--text); }
+.policy__list li::before { content: ""; position: absolute; left: 3px; top: .55em; width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+.policy__list strong { color: var(--accent-dark, var(--accent)); }
+.field .policy__agree { display: flex; gap: 10px; align-items: flex-start; margin: 0; padding-top: 12px; border-top: 1px dashed var(--line); font-weight: 700; font-size: .92rem; cursor: pointer; }
+.field .policy__agree input { width: 20px; height: 20px; min-height: 0; margin: 1px 0 0; padding: 0; border: 0; background: none; flex: none; accent-color: var(--accent); cursor: pointer; }
+
 /* ---------- Pickup time chips ---------- */
 .times__list { display: flex; flex-wrap: wrap; gap: 8px; }
 .times__list label { position: relative; margin: 0; font-weight: 700; }

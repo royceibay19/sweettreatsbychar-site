@@ -453,6 +453,21 @@
             <label for="f-details">Theme, flavors and details</label>
             <textarea id="f-details" name="details" rows="4" placeholder="Celebrant's name and age, theme, colors, number of guests..."></textarea>
           </div>
+
+          <div class="field policy" id="policy">
+            <p class="policy__title">Reservation policy</p>
+            <ul class="policy__list">
+              <li>A <strong>50% downpayment</strong> is required to secure your slot.</li>
+              <li>Your reservation is confirmed only after the downpayment is received.</li>
+              <li>The remaining 50% balance must be paid on or before the event or pickup date.</li>
+              <li>The downpayment is <strong>non-refundable</strong>.</li>
+            </ul>
+            <label class="policy__agree" for="f-agree">
+              <input type="checkbox" id="f-agree" name="agree" value="yes">
+              <span>I have read and agree to the reservation policy.</span>
+            </label>
+            <p class="field__error" id="e-agree">Please agree to the reservation policy to continue.</p>
+          </div>
           <button class="btn btn--primary btn--block" type="submit">Prepare my message</button>
 
           <div class="inquiry__done" id="inquiry-done" hidden tabindex="-1">
