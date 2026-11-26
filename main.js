@@ -276,24 +276,6 @@ function formatDate(iso) {
   return new Date(y, m - 1, d).toLocaleDateString("en-PH", { weekday: "short", month: "long", day: "numeric", year: "numeric" });
 }
 
-let currentMessage = "";
-const copyBtn = document.getElementById("copy-message");
-const copyStatus = document.getElementById("copy-status");
-
-function setCopyStatus(ok) {
-  copyStatus.textContent = ok ? "✓ Copied" : "Couldn't copy. Select the message above, copy it, then tap Open Messenger.";
-  copyStatus.classList.toggle("is-error", !ok);
-}
-
-copyBtn.addEventListener("click", () => {
-  copyText(currentMessage).then(setCopyStatus);
-});
-
-// Copy again right as Messenger opens, so the clipboard surely holds the message
-document.getElementById("send-messenger").addEventListener("click", () => {
-  if (currentMessage) copyText(currentMessage);
-});
-
 let redirectTimer;
 form.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -322,23 +304,10 @@ form.addEventListener("submit", (e) => {
     : "I have read and agree to the reservation policy (50% non-refundable downpayment to secure my slot).");
   const message = lines.join("\n");
 
-  currentMessage = message;
-  // copy first, while the tap still counts as the customer's own action
+  // quiet backup copy, in case a phone's Messenger app opens without the text
   copyText(message);
 
-  const url = messengerWith(message);
-  const done = document.getElementById("inquiry-done");
-  document.getElementById("inquiry-preview").textContent = message;
-  document.getElementById("send-messenger").href = url;
-  document.getElementById("send-sms").href = `sms:${PHONE}?body=${encodeURIComponent(message)}`;
-
-  copyStatus.textContent = "Opening Messenger with your message…";
-  copyStatus.classList.remove("is-error");
-
-  done.hidden = false;
-  done.focus();
-  done.scrollIntoView({ behavior: "smooth", block: "nearest" });
-
+  document.getElementById("inquiry-done").hidden = false;
   clearTimeout(redirectTimer);
-  redirectTimer = setTimeout(() => { window.location.href = url; }, 1500);
+  redirectTimer = setTimeout(() => { window.location.href = messengerWith(message); }, 600);
 });

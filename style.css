@@ -406,17 +406,7 @@ fieldset.field { border: 0; padding: 0; margin: 0 0 18px; min-width: 0; }
 .times__list input:disabled + span { opacity: .45; cursor: default; }
 .times.has-error .times__list span { border-color: #B0173F; }
 
-.inquiry__done { margin-top: 24px; padding: 22px; border-radius: 16px; background: var(--bg); border: 1px solid var(--line); }
-.inquiry__done:focus { outline: none; }
-.inquiry__done h4 { font-size: 1.4rem; margin-bottom: 6px; }
-.inquiry__done p { color: var(--muted); }
-.inquiry__preview { white-space: pre-wrap; font: .9rem/1.5 var(--font); background: var(--surface); border: 1px dashed var(--line); border-radius: 10px; padding: 14px; margin: 0 0 16px; max-height: 220px; overflow: auto; }
-.inquiry__send { display: flex; flex-wrap: wrap; gap: 10px; }
-.inquiry__done .inquiry__copied { color: #2E7D4F; font-weight: 600; font-size: .92rem; margin: 10px 0 0; min-height: 1.2em; }
-.inquiry__done .inquiry__copied.is-error { color: #B0173F; }
-.inquiry__hint { font-size: .9rem; margin: 6px 0 14px; }
-.inquiry__alt { font-size: .92rem; margin: 0; }
-.inquiry__alt a { color: var(--accent); font-weight: 600; }
+.inquiry__opening { margin: 16px 0 0; text-align: center; font-weight: 700; color: var(--accent); }
 
 /* Small "copied" notice for the Ask about this cake links */
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); max-width: min(92vw, 420px); background: var(--text); color: #fff; padding: 12px 18px; border-radius: 12px; font-size: .95rem; box-shadow: 0 10px 30px rgba(62, 15, 42, .25); opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; z-index: 60; text-align: center; }
