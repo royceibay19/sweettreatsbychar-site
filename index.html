@@ -481,17 +481,7 @@
           </div>
           <button class="btn btn--primary btn--block" type="submit">Send on Messenger</button>
 
-          <div class="inquiry__done" id="inquiry-done" hidden tabindex="-1">
-            <h4>Your message is ready</h4>
-            <p class="inquiry__copied" id="copy-status" role="status" aria-live="polite"></p>
-            <pre class="inquiry__preview" id="inquiry-preview"></pre>
-            <p class="inquiry__hint">Your message is typed in the chat for you. Just tap <strong>Send</strong>. If the chat box is empty, press and hold it and tap <strong>Paste</strong>. We copied it for you too.</p>
-            <div class="inquiry__send">
-              <a class="btn btn--primary" id="send-messenger" href="https://m.me/100083340789131">Open Messenger again</a>
-              <button type="button" class="btn btn--ghost" id="copy-message">Copy message</button>
-            </div>
-            <p class="inquiry__alt">No Messenger? <a id="send-sms" href="sms:+639661943736">Send it as a text message</a> instead. It fills in by itself.</p>
-          </div>
+          <p class="inquiry__opening" id="inquiry-done" role="status" aria-live="polite" hidden>Opening Messenger with your message…</p>
         </form>
       </div>
     </section>
