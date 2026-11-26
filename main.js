@@ -49,15 +49,16 @@ if ("IntersectionObserver" in window && !matchMedia("(prefers-reduced-motion: re
 // ---- Messenger links: one place to change the URL ----
 document.querySelectorAll(".js-messenger").forEach((a) => { a.href = MESSENGER_URL; });
 
-// Messenger links (m.me) cannot carry a typed message, so we copy the text
-// to the clipboard and tell the customer to paste it in the chat.
+// m.me links can carry a ready-made message (?text=). We also copy it, in case
+// a phone's Messenger app opens the chat without it.
+const messengerWith = (text) => `${MESSENGER_URL}?text=${encodeURIComponent(text)}`;
 
-// "Ask about this cake" buttons copy a short note so the customer can paste it in Messenger
+// "Ask about this cake" links open the chat with a short note already typed
 document.querySelectorAll(".js-messenger[data-cake]").forEach((a) => {
+  const note = `Hi Char! I'd like to ask about the ${a.dataset.cake}.`;
+  a.href = messengerWith(note);
   a.addEventListener("click", () => {
-    copyText(`Hi Char! I'd like to ask about the ${a.dataset.cake}.`).then((ok) => {
-      if (ok) toast("Message copied. In Messenger, press and hold the message box and tap Paste.");
-    });
+    copyText(note);
   });
 });
 
@@ -284,27 +285,17 @@ function setCopyStatus(ok) {
   copyStatus.classList.toggle("is-error", !ok);
 }
 
-// Copy, then take the customer straight to Char's Messenger chat
 copyBtn.addEventListener("click", () => {
-  copyText(currentMessage).then((ok) => {
-    setCopyStatus(ok);
-    if (!ok) return;
-    copyStatus.textContent = "✓ Copied. Opening Messenger…";
-    toast("Message copied. In Messenger, press and hold the message box and tap Paste.");
-    setTimeout(() => { window.location.href = MESSENGER_URL; }, 1200);
-  });
+  copyText(currentMessage).then(setCopyStatus);
 });
 
 // Copy again right as Messenger opens, so the clipboard surely holds the message
 document.getElementById("send-messenger").addEventListener("click", () => {
-  if (!currentMessage) return;
-  copyText(currentMessage).then((ok) => {
-    setCopyStatus(ok);
-    if (ok) toast("Message copied. In Messenger, press and hold the message box and tap Paste.");
-  });
+  if (currentMessage) copyText(currentMessage);
 });
 
-form.addEventListener("submit", async (e) => {
+let redirectTimer;
+form.addEventListener("submit", (e) => {
   e.preventDefault();
   const results = Object.keys(rules).map(validateField);
   if (results.includes(false)) {
@@ -332,15 +323,22 @@ form.addEventListener("submit", async (e) => {
   const message = lines.join("\n");
 
   currentMessage = message;
+  // copy first, while the tap still counts as the customer's own action
+  copyText(message);
+
+  const url = messengerWith(message);
   const done = document.getElementById("inquiry-done");
   document.getElementById("inquiry-preview").textContent = message;
-  document.getElementById("send-messenger").href = MESSENGER_URL;
+  document.getElementById("send-messenger").href = url;
   document.getElementById("send-sms").href = `sms:${PHONE}?body=${encodeURIComponent(message)}`;
 
-  copyStatus.textContent = "";
+  copyStatus.textContent = "Opening Messenger with your message…";
   copyStatus.classList.remove("is-error");
 
   done.hidden = false;
   done.focus();
   done.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+  clearTimeout(redirectTimer);
+  redirectTimer = setTimeout(() => { window.location.href = url; }, 1500);
 });
