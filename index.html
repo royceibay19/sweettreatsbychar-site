@@ -382,7 +382,7 @@
 
         <form class="inquiry reveal" id="inquiry" novalidate>
           <h3 class="inquiry__title">Custom cake inquiry</h3>
-          <p class="inquiry__hint">Fill this in and we'll turn it into a message you can send us in one tap.</p>
+          <p class="inquiry__hint">Fill this in and we'll open Messenger with your message ready to send.</p>
           <div class="field">
             <label for="f-name">Your name</label>
             <input id="f-name" name="name" type="text" autocomplete="name" required>
@@ -479,18 +479,17 @@
             </label>
             <p class="field__error" id="e-agree">Please agree to the reservation policy to continue.</p>
           </div>
-          <button class="btn btn--primary btn--block" type="submit">Prepare my message</button>
+          <button class="btn btn--primary btn--block" type="submit">Send on Messenger</button>
 
           <div class="inquiry__done" id="inquiry-done" hidden tabindex="-1">
             <h4>Your message is ready</h4>
-            <p>Messenger doesn't let websites type a message for you, so we copy it. Then you paste it in the chat.</p>
-            <pre class="inquiry__preview" id="inquiry-preview"></pre>
-            <div class="inquiry__send">
-              <button type="button" class="btn btn--primary" id="copy-message">Copy message</button>
-              <a class="btn btn--ghost" id="send-messenger" href="https://m.me/100083340789131" target="_blank" rel="noopener">Open Messenger</a>
-            </div>
             <p class="inquiry__copied" id="copy-status" role="status" aria-live="polite"></p>
-            <p class="inquiry__hint"><strong>Copy message</strong> copies it and takes you straight to Sweet Treats by Char on Messenger. In the chat, press and hold the message box, tap <strong>Paste</strong>, then send.</p>
+            <pre class="inquiry__preview" id="inquiry-preview"></pre>
+            <p class="inquiry__hint">Your message is typed in the chat for you. Just tap <strong>Send</strong>. If the chat box is empty, press and hold it and tap <strong>Paste</strong>. We copied it for you too.</p>
+            <div class="inquiry__send">
+              <a class="btn btn--primary" id="send-messenger" href="https://m.me/100083340789131">Open Messenger again</a>
+              <button type="button" class="btn btn--ghost" id="copy-message">Copy message</button>
+            </div>
             <p class="inquiry__alt">No Messenger? <a id="send-sms" href="sms:+639661943736">Send it as a text message</a> instead. It fills in by itself.</p>
           </div>
         </form>
