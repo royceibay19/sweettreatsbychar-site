@@ -407,6 +407,8 @@ fieldset.field { border: 0; padding: 0; margin: 0 0 18px; min-width: 0; }
 .times.has-error .times__list span { border-color: #B0173F; }
 
 .inquiry__opening { margin: 16px 0 0; text-align: center; font-weight: 700; color: var(--accent); }
+.inquiry__opening a { display: block; margin-top: 8px; color: var(--text); font-weight: 600; text-decoration: underline; }
+.inquiry__opening a[hidden] { display: none; }
 
 /* Small "copied" notice for the Ask about this cake links */
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); max-width: min(92vw, 420px); background: var(--text); color: #fff; padding: 12px 18px; border-radius: 12px; font-size: .95rem; box-shadow: 0 10px 30px rgba(62, 15, 42, .25); opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; z-index: 60; text-align: center; }

@@ -307,7 +307,14 @@ form.addEventListener("submit", (e) => {
   // quiet backup copy, in case a phone's Messenger app opens without the text
   copyText(message);
 
+  const url = messengerWith(message);
+  const fallback = document.getElementById("open-fallback");
+  fallback.href = url;
+  fallback.hidden = true;
   document.getElementById("inquiry-done").hidden = false;
   clearTimeout(redirectTimer);
-  redirectTimer = setTimeout(() => { window.location.href = messengerWith(message); }, 600);
+  redirectTimer = setTimeout(() => {
+    window.location.href = url;
+    setTimeout(() => { fallback.hidden = false; }, 2500); // only shows if we're still here
+  }, 400);
 });
